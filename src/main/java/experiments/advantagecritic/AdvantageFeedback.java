@@ -3,6 +3,7 @@ package experiments.advantagecritic;
 import burlap.behavior.policy.EnumerablePolicy;
 import burlap.behavior.singleagent.humanfeedback.FeedbackReceiver;
 import burlap.behavior.singleagent.planning.stochastic.policyiteration.PolicyEvaluation;
+import burlap.debugtools.RandomFactory;
 import burlap.mdp.core.action.Action;
 import burlap.mdp.core.state.State;
 import burlap.mdp.singleagent.SADomain;
@@ -25,6 +26,7 @@ public class AdvantageFeedback implements EnvironmentObserver {
     protected double viDelta;
     protected int maxIterations;
     protected PolicyEvaluation pe = null;
+    protected double probf = 1.;
 
 
     public AdvantageFeedback(FeedbackReceiver receiver, EnumerablePolicy actor, SADomain domain, HashableStateFactory hashingFactory, double gamma, double viDelta, int maxIterations) {
@@ -37,8 +39,24 @@ public class AdvantageFeedback implements EnvironmentObserver {
         this.maxIterations = maxIterations;
     }
 
+    public AdvantageFeedback(FeedbackReceiver receiver, EnumerablePolicy actor, SADomain domain, HashableStateFactory hashingFactory, double gamma, double viDelta, int maxIterations, double probf) {
+        this.receiver = receiver;
+        this.actor = actor;
+        this.domain = domain;
+        this.hashingFactory = hashingFactory;
+        this.gamma = gamma;
+        this.viDelta = viDelta;
+        this.maxIterations = maxIterations;
+        this.probf = probf;
+    }
+
     @Override
     public void observeEnvironmentActionInitiation(State o, Action action) {
+
+        if(RandomFactory.getMapped(0).nextDouble() > this.probf){
+            return ;
+        }
+
         if(pe == null){
             pe = new PolicyEvaluation(domain, gamma, hashingFactory, viDelta, maxIterations);
             pe.toggleDebugPrinting(false);
@@ -58,5 +76,9 @@ public class AdvantageFeedback implements EnvironmentObserver {
     @Override
     public void observeEnvironmentReset(Environment resetEnvironment) {
 
+    }
+
+    public PolicyEvaluation getPe(){
+        return this.pe;
     }
 }
